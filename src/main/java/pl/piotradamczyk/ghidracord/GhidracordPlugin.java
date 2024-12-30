@@ -40,7 +40,8 @@ public class GhidracordPlugin extends ProgramPlugin {
         super.init();
         DiscordEventHandlers discordEventHandlers = new DiscordEventHandlers.Builder()
                 .setReadyEventHandler((user) -> System.out.println("Connected to Discord account: "
-                        + user.username + "#" + user.discriminator + "!")).build();
+                        + user.username + "#" + user.discriminator + "!"))
+                .build();
         DiscordRPC.discordInitialize("948701935735799878", discordEventHandlers, true);
         updatePresenceInfo();
     }
@@ -58,9 +59,9 @@ public class GhidracordPlugin extends ProgramPlugin {
             return;
         }
 
-        String desc = this.getCurrentProgram().getName();
-
+        String executable = this.getCurrentProgram().getName();
         String status = null;
+
         if (this.getTool().getToolName().equals("CodeBrowser")) {// current function name
             Address currentAddress = this.currentLocation.getAddress();
             if (currentAddress != null) {
@@ -68,14 +69,15 @@ public class GhidracordPlugin extends ProgramPlugin {
                 if (functionManager != null) {
                     Function currentFunc = functionManager.getFunctionContaining(currentAddress);
                     if (currentFunc != null) {
-                        long offset = this.currentLocation.getAddress().getOffset();
-                        status = currentFunc.getName() + " + 0x" + Long.toHexString(offset);
+                        currentFunc.getParentNamespace().toString();
+                        Long offset = this.currentLocation.getAddress().getOffset();
+                        status = currentFunc.getName(true) + " (0x" + Long.toHexString(offset) + ")";
                     }
                 }
             }
         }
 
-        this.updateRichPresence(desc, status);
+        this.updateRichPresence(executable, status);
     }
 
     @Override
@@ -113,19 +115,19 @@ public class GhidracordPlugin extends ProgramPlugin {
         updatePresenceInfo();
     }
 
-    private void updateRichPresence(String programStatus, String subStatus) {
-        String program = programStatus == null ? "Idle" : programStatus;
-        String sub = subStatus == null ? "" : subStatus;
+    private void updateRichPresence(String executable, String status) {
+        executable = executable == null ? "Idle" : executable;
+        status = status == null ? "" : status;
 
         if (runningSince == 0) {
             runningSince = System.currentTimeMillis();
         }
 
-        DiscordRichPresence.Builder rpc = new DiscordRichPresence.Builder(sub);
+        DiscordRichPresence.Builder rpc = new DiscordRichPresence.Builder(status);
         this.setSmallIcon(rpc);
         rpc.setBigImage("logo", "Ghidra");
         rpc.setStartTimestamps(runningSince);
-        rpc.setDetails(program);
+        rpc.setDetails(executable);
 
         DiscordRPC.discordUpdatePresence(rpc.build());
     }
